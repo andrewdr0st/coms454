@@ -56,6 +56,7 @@ int main(int argc, char* argv[]) {
     printf("Server listening on port %d\n", port);
   }
 
+  //listen for clients
   while (1) {
     int client = accept(sock, NULL, NULL);
     SSL *ssl = SSL_new(ctx);
