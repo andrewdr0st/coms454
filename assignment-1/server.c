@@ -29,6 +29,14 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  char ip[INET_ADDRLEN] = get_ip();
+  if (strlen(ip) == 0) {
+    if (logging) {
+      fprintf(stderr, "Could not determine server's IP address\n");
+    }
+    return 1;
+  }
+
   //Init SSL context
   SSL_load_error_strings();
   const SSL_METHOD* method = TLS_server_method();
@@ -68,6 +76,7 @@ int main(int argc, char* argv[]) {
     if (SSL_accept(ssl) <= 0) {
       ERR_print_errors_fp(stderr);
     } else {
+      //read client message
       char buf[1024] = {0};
       int bytes = SSL_read(ssl, buf, sizeof(buf) - 1);
       if (bytes > 0) {
@@ -76,14 +85,15 @@ int main(int argc, char* argv[]) {
         }
         int input = atoi(buf);
         if (input == 1) {
+          //send time
           time_t now = time(NULL);
           struct tm *t = localtime(&now);
           char reply[TIME_LEN];
           strftime(reply, TIME_LEN, "%Y/%m/%d:%H:%M:%S", t);
           SSL_write(ssl, reply, TIME_LEN);
         } else if (input == 2) {
-          const char *reply = "192.168.8.13\n";
-          SSL_write(ssl, reply, strlen(reply));
+          //send ip
+          SSL_write(ssl, ip, strlen(ip));
         }
       }
     }
@@ -95,4 +105,35 @@ int main(int argc, char* argv[]) {
   close(sock);
   SSL_CTX_free(ctx);
   return 0;
+}
+
+
+//Establish a dummy connection to find IP, doesn't send any packets
+char* get_ip() {
+  char ip[INET_ADDRSTRLEN] = "\0";
+  struct sockaddr_in serv;
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sock < 0) {
+    return ip;
+  }
+
+  memset(&serv, 0, sizeof(serv));
+  serv.sin_family = AF_INET;
+  serv.sin_port = htons(80);
+  inet_pton(AF_INET, "8.8.8.8", &serv.sin_addr);
+  if (connect(sock, (struct sockaddr*)&serv, sizeof(serv)) < 0) {
+    close(sock);
+    return ip;
+  }
+
+  struct sockaddr_in name;
+  socklen_t namelen = sizeof(name);
+  if (getsockname(sock, (struct sockaddr*)&name, &namelen) == -1) {
+    close(sock);
+    return ip;
+  }
+
+  inet_ntop(AF_INET, &name.sin_addr, ip, sizeof(ip));
+  close(sock);
+  return ip;
 }
