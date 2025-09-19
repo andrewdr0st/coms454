@@ -54,9 +54,13 @@ int main(int argc, char* argv[]) {
     ERR_print_errors_fp(stderr);
   } else {
     //send input to server
-    char buf[2];
-    snprintf(buf, 2, "%d", input);
-    SSL_write(ssl, buf, 2);
+    char send[2];
+    snprintf(send, 2, "%d", input);
+    SSL_write(ssl, send, 2);
+    //print recieved message
+    char recv[1024] = {0};
+    SSL_read(ssl, recv, sizeof(buf)-1);
+    printf("Server sent:\n%s\n", recv);
   }
 
   SSL_free(ssl);

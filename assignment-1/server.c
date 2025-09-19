@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+
+#define TIME_LEN 20
 
 int port = 4443;
 int logging = 1;
@@ -66,9 +69,22 @@ int main(int argc, char* argv[]) {
       ERR_print_errors_fp(stderr);
     } else {
       char buf[1024] = {0};
-      SSL_read(ssl, buf, sizeof(buf) - 1);
-      if (logging) {
-        printf("Message recieved from client:\n%s\n", buf);
+      int bytes = SSL_read(ssl, buf, sizeof(buf) - 1);
+      if (bytes > 0) {
+        if (logging) {
+          printf("Message recieved from client:\n%s\n", buf);
+        }
+        int input = atoi(buf);
+        if (input == 1) {
+          time_t now = time(NULL);
+          struct tm *t = localtime(&now);
+          char reply[TIME_LEN];
+          strftime(reply, TIME_LEN, "%Y/%m/%d:%H:%M:%S", t);
+          SSL_write(ssl, reply, TIME_LEN);
+        } else if (input == 2) {
+          const char *reply = "192.168.8.13\n";
+          SSL_write(ssl, reply, strlen(reply));
+        }
       }
     }
     SSL_shutdown(ssl);
