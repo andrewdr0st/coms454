@@ -9,6 +9,8 @@
 
 #define TIME_LEN 20
 
+int get_ip(char ip[INET_ADDSTRLEN]);
+
 int port = 4443;
 int logging = 1;
 
@@ -29,8 +31,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  char ip[INET_ADDRLEN] = get_ip();
-  if (strlen(ip) == 0) {
+  char ip[INET_ADDSTRLEN];
+  if (get_ip(&ip) != 0) {
     if (logging) {
       fprintf(stderr, "Could not determine server's IP address\n");
     }
@@ -109,12 +111,11 @@ int main(int argc, char* argv[]) {
 
 
 //Establish a dummy connection to find IP, doesn't send any packets
-char* get_ip() {
-  char ip[INET_ADDRSTRLEN] = "\0";
+int get_ip(char ip[INET_ADDSTRLEN]) {
   struct sockaddr_in serv;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
-    return ip;
+    return 1;
   }
 
   memset(&serv, 0, sizeof(serv));
@@ -123,17 +124,17 @@ char* get_ip() {
   inet_pton(AF_INET, "8.8.8.8", &serv.sin_addr);
   if (connect(sock, (struct sockaddr*)&serv, sizeof(serv)) < 0) {
     close(sock);
-    return ip;
+    return 1;
   }
 
   struct sockaddr_in name;
   socklen_t namelen = sizeof(name);
   if (getsockname(sock, (struct sockaddr*)&name, &namelen) == -1) {
     close(sock);
-    return ip;
+    return 1;
   }
 
   inet_ntop(AF_INET, &name.sin_addr, ip, sizeof(ip));
   close(sock);
-  return ip;
+  return 0;
 }
