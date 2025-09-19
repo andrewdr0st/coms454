@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -31,11 +33,11 @@ int main(int argc, char* argv[]) {
   }
 
   //Get user input
-  int input = 0;
+  int input;
   printf("Type 1 to ask server for the current time\nType 2 to ask server for the IP of the localhost\n");
   scanf("%d", &input);
   if (input != 1 && input != 2) {
-    fprintf(stderr, "You muest enter 1 or 2\n");
+    fprintf(stderr, "You must enter 1 or 2\n");
     return 1;
   }
 
@@ -52,7 +54,9 @@ int main(int argc, char* argv[]) {
     ERR_print_errors_fp(stderr);
   } else {
     //send input to server
-    SSL_write(ssl, input, sizeof(int));
+    char buf[2];
+    snprintf(buf, 2, "%d", input);
+    SSL_write(ssl, buf, 2);
   }
 
   SSL_free(ssl);
