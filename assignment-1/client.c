@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     SSL_write(ssl, send, 2);
     //print recieved message
     char recv[1024] = {0};
-    SSL_read(ssl, recv, sizeof(buf)-1);
+    SSL_read(ssl, recv, sizeof(recv) - 1);
     printf("Server sent:\n%s\n", recv);
   }
 

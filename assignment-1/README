@@ -1,6 +1,10 @@
-make to build
+run make to build
 
-./server to run server
-./client to run client
+./server [-s] [-p portnum] to run server
+	-s: run in silent mode
+	-p: specificy port number. default is 4443
 
-PEM pass phrase is "ds2025f"
+./client [-p portnum] to run client
+	-p: specify port nu,ber. default is 4443
+
+
