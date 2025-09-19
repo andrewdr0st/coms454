@@ -4,12 +4,13 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
 #define TIME_LEN 20
 
-int get_ip(char ip[INET_ADDSTRLEN]);
+int get_ip(char*);
 
 int port = 4443;
 int logging = 1;
@@ -31,8 +32,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  char ip[INET_ADDSTRLEN];
-  if (get_ip(&ip) != 0) {
+  char ip[INET_ADDRSTRLEN];
+  if (get_ip(ip) != 0) {
     if (logging) {
       fprintf(stderr, "Could not determine server's IP address\n");
     }
@@ -111,7 +112,7 @@ int main(int argc, char* argv[]) {
 
 
 //Establish a dummy connection to find IP, doesn't send any packets
-int get_ip(char ip[INET_ADDSTRLEN]) {
+int get_ip(char* ip) {
   struct sockaddr_in serv;
   int sock = socket(AF_INET, SOCK_DGRAM, 0);
   if (sock < 0) {
@@ -134,7 +135,7 @@ int get_ip(char ip[INET_ADDSTRLEN]) {
     return 1;
   }
 
-  inet_ntop(AF_INET, &name.sin_addr, ip, sizeof(ip));
+  inet_ntop(AF_INET, &name.sin_addr, ip, INET_ADDRSTRLEN);
   close(sock);
   return 0;
 }
