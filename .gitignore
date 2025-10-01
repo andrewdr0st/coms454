@@ -2,3 +2,5 @@
 sever
 client
 *.zip
+posint_server
+posint_client
